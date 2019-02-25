@@ -8,7 +8,7 @@ import os
 from app import app
 from flask import render_template, request, redirect, url_for, flash, session, abort
 from werkzeug.utils import secure_filename
-
+from forms import UploadPhoto
 
 ###
 # Routing for your application.
@@ -26,23 +26,32 @@ def about():
     return render_template('about.html', name="Mary Jane")
 
 
-@app.route('/upload', methods=['POST', 'GET'])
-def upload():
-    if not session.get('logged_in'):
-        abort(401)
-
-    # Instantiate your form class
-
-    # Validate file upload on submit
+@app.route('/wtform', methods=['POST', 'GET'])
+def LogIn():
+    login=LogIn()
     if request.method == 'POST':
-        # Get file data and save to your uploads folder
+        if login.validate_on_submit():
+            firstname = login.firstname.data
+            password = login.password.data
+            #should check directory if name and password match before giving access
+    return render_template('login.html', firstname=firstname)
 
-        flash('File Saved', 'success')
-        return redirect(url_for('home'))
+@app.route('/uploadphoto', methods=['GET', 'POST'])
+def UploadPhoto(): 
+    photo = UploadPhoto()
+    if request.method == 'POST' and photo.validate_on_submit():
+        request.files['photo'] 
+        description = photo.description.data
 
-    return render_template('upload.html')
+    filename = secure_filename(photo.filename)
+    photo.save(os.path.join(app.config['uploads'], filename))
+    flash('File Saved', 'success')
+    return render_template('uploads.html', form=photo)
 
-
+@app.route('/files')
+def files():
+    return render_template('filess.html')
+    
 @app.route('/login', methods=['POST', 'GET'])
 def login():
     error = None
@@ -99,6 +108,16 @@ def add_header(response):
 def page_not_found(error):
     """Custom 404 page."""
     return render_template('404.html'), 404
+    
+rootdir = " lab4//app//static//uploads"
+#arcpy.env.overwriteOutput = True  
+counter=0
+
+rootdir = os.getcwd()
+print (rootdir)
+for subdir, dirs, files in os.walk(rootdir + '/some/folder'):
+    for file in files:
+        print (os.path.join(subdir, file)) 
 
 
 if __name__ == '__main__':
